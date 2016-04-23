@@ -1,53 +1,58 @@
 // Application files
 #include "sort.h"
 #include <stdlib.h>
+#include <stdio.h>
 
-static void merge(int *data, int min, int mid, int max)
+static void merge(int *data, int *temp, int min, int mid, int max)
 {
-    int buff[max - min + 1];
     int pos = 0;
     int low = min;
-    int high = mid + 1;
-    
-    // Sort data
-    while (low <= mid && high <= max) {
-        if (data[low] <= data[high])
-            buff[pos++] = data[low++];
-        else 
-            buff[pos++] = data[high++];
+    int high = mid;    
+
+    // Merge lower and higher part of array
+    while (low < mid && high < max) {
+        if (data[low] < data[high])
+            temp[pos++] = data[low++];
+        else
+            temp[pos++] = data[high++];        
     }
     
     // Get remaining lower elements
-    while (low <= mid) {
-        buff[pos++] = data[low++];
+    while (low < mid) {
+        temp[pos++] = data[low++];
     }
     
     // Get remaining higher elements
-    while (high <= max) {
-        buff[pos++] = data[high++];
-    }
+    while (high < max) {
+        temp[pos++] = data[high++];
+    }    
     
-    // Copy back data
-    while (--pos >= 0) {
-        data[min + pos] = buff[pos];
+    // Copy back sorted data
+    pos = 0;
+    while (min < max) {
+        data[min++] = temp[pos++];
     }
 }
 
-static void _mergesort(int *data, int min, int max)
+static void _split(int *data, int *temp, int min, int max)
 {
-    if (min >= max)
-        return;
-        
-    int mid = (min + max) / 2;
+    if (max - min <= 1)
+        return; // Done splitting
     
-    _mergesort(data, min, mid);
-    _mergesort(data, mid + 1, max);
+    int mid = (max + min) / 2;
+
+    _split(data, temp, min, mid);
+    _split(data, temp, mid, max);
     
-    merge(data, min, mid, max);
+    merge(data, temp, min, mid, max);
 }
 
 
 void mergesort(int *data, int size)
 {
-    _mergesort(data, 0, size - 1);    
+    int *temp = malloc(sizeof(int) * size);
+    
+    _split(data, temp, 0, size);  
+    
+    free(temp);
 }

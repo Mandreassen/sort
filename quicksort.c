@@ -3,36 +3,35 @@
 
 static int partition(int *data, int min, int max)
 {
-	int pivot 	= max;
-	int wall 	= min;
-	int current = min;
-
-	while (current < pivot) {
-		
-        if (data[current] > data[pivot]) {
-			current++;
-            
+    int pivot = max;
+    int wall  = min;
+    int curr  = min;
+    
+    while (curr < pivot) {
+        
+        if (data[curr] < data[pivot]) {
+            SWAP(data[curr], data[wall]);
+            curr++;
+            wall++;                      
         } else {
-			SWAP(data[current], data[wall]);
-			wall++;
-			current++;
-		}	
-	}	
-
-	SWAP(data[pivot], data[wall]);
-
-	return wall;
+            curr++; 
+        }
+    }
+    
+    SWAP(data[pivot], data[wall]);
+    
+    return wall;
 }
 
 static void _quicksort(int *data, int min, int max)
 {
-    if (min >= max)
-        return;
+    if (max - min < 1)
+        return; // Done
         
-    int mid = partition(data, min, max);
-
-    _quicksort(data, min, mid - 1);
-    _quicksort(data, mid + 1, max);
+    int split = partition(data, min, max);
+    
+    _quicksort(data, min, split - 1);
+    _quicksort(data, split + 1, max);
 }
 
 
