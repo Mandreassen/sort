@@ -9,11 +9,15 @@
 // Application files
 #include "sort.h"
 
+// Print colors
+#define RED  "\x1B[31m"
+#define GREEN  "\x1B[32m"
+#define NORM  "\x1B[0m"
+
 typedef enum {
     false,
     true
 } bool;
-
 
 typedef struct test_data {
     int *unsorted; // Data for testing
@@ -94,7 +98,6 @@ void teardown(test_data_t *test_data)
 void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *name)
 {
     int *data;
-    char *result;
     unsigned long long time;    
    
     // Copy test data
@@ -108,11 +111,14 @@ void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *
     time = now(); // Start timer    
     sort_func(data, test_data->size); // Run sort    
     time = now() - time; // Stop timer    
-    
-    // Validate result
-    result = (validate_sort(data, test_data)) ? "Success" : "Failure";
-    
-    printf("\r%s completed in %.2f sec. Result: %s\n", name, (float) time/1000000, result);    
+   
+    // Print result 
+    printf("\r%s completed in %.2f sec. Result: ", name, (float) time/1000000);
+    if (validate_sort(data, test_data))
+        printf(GREEN "Success\n" NORM);
+    else
+        printf(RED "Failure\n" NORM);        
+        
     free(data);
 }
 

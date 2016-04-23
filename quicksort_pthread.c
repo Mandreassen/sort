@@ -2,8 +2,9 @@
 #include "sort.h"
 #include <pthread.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-typedef struct tast {
+typedef struct task {
     int *data;
     int min;
     int max;
@@ -97,7 +98,7 @@ static void *_thread(void *task)
         
     int split = partition(data, min, max);
     
-    if (level > 6) {
+    if (level > sysconf(_SC_NPROCESSORS_ONLN)) {
         
         _quicksort(data, min, split - 1);
         _quicksort(data, split + 1, max);  
