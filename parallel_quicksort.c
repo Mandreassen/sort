@@ -1,8 +1,13 @@
-// Application files
-#include "sort.h"
+/* author: Marius Andreassen (marius.andreassen@uit.no) */
+
+// Standard libs
 #include <pthread.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+// Application files
+#include "sort.h"
+
 
 typedef struct task {
     int *data;
@@ -11,8 +16,7 @@ typedef struct task {
     int level;
 } task_t;
 
-
-
+/* Find pivot an place it at the end the of sub-array */
 int select_pivot(int *data, int min, int max)
 {
     int h, l, m;
@@ -39,7 +43,7 @@ int select_pivot(int *data, int min, int max)
     }        
 }
 
-
+/* Select pivot and partition data */
 static int partition(int *data, int min, int max)
 {    
     int pivot = select_pivot(data, min, max);
@@ -62,18 +66,7 @@ static int partition(int *data, int min, int max)
     return wall;
 }
 
-task_t *create_task(int *data, int min, int max, int level)
-{
-    task_t *new = malloc(sizeof(task_t));
-    new->data = data;
-    new->min  = min;
-    new->max  = max;
-    new->level = level;
-    
-    return new;
-}
-
-
+/* Recursive quicksort algorithm */
 static void _quicksort(int *data, int min, int max)
 {
     if (max - min < 1)
@@ -85,49 +78,50 @@ static void _quicksort(int *data, int min, int max)
     _quicksort(data, split + 1, max);
 }
 
-
+/* Threaded quicksort algorithm */
 static void *_thread(void *task)
 {
-    int *data = ((task_t*) task)->data;
-    int min   = ((task_t*) task)->min;
-    int max   = ((task_t*) task)->max;
-    int level = ((task_t*) task)->level;
+    task_t t = *((task_t*) task);
     
-    if (max - min < 1)
+    if (t.max - t.min < 1)
         return NULL; // Done     
         
-    int split = partition(data, min, max);
+    int split = partition(t.data, t.min, t.max);
     
-    if (level > sysconf(_SC_NPROCESSORS_ONLN)) {
+    if (t.level > sysconf(_SC_NPROCESSORS_ONLN)) {
         
-        _quicksort(data, min, split - 1);
-        _quicksort(data, split + 1, max);  
+        _quicksort(t.data, t.min, split - 1);
+        _quicksort(t.data, split + 1, t.max);  
               
     } else {
     
-        task_t *taskA = create_task(data, min, split - 1, level + 1);
-        task_t *taskB = create_task(data, split + 1, max, level + 1);    
-
         pthread_t a, b; 
-        pthread_create(&a, NULL, _thread, (void*) taskA);
-        pthread_create(&b, NULL, _thread, (void*) taskB);    
+        task_t taskA = {.data = t.data, .min = t.min, .max = split - 1, .level = t.level + 1};
+        task_t taskB = {.data = t.data, .min = split + 1, .max = t.max, .level = t.level + 1};
+        
+        pthread_create(&a, NULL, _thread, (void*) &taskA);
+        pthread_create(&b, NULL, _thread, (void*) &taskB);
+        
         pthread_join(a, NULL);
         pthread_join(b, NULL);
-        
-        free(taskA);
-        free(taskB);
     }
     
     return NULL; // Done
 }
 
 
+/* SORT INTS:
+ * Data sets smaller than 1000000 will
+ * be sorted using a normal quicksort 
+ * implementation.
+ * Larger data sets will be sorted using
+ * a threaded quicksort implementation. */
 void sort_ints(int *data, int size)
 {
     if (size < 1000000)
         return _quicksort(data, 0, size - 1);    
     
-    task_t *task = create_task(data, 0, size-1, 1);    
-    _thread((void*) task);
-    free(task);
+    task_t task = {.data = data, .min = 0, .max = size - 1, .level = 1};
+    
+    _thread((void*) &task);
 }

@@ -1,6 +1,7 @@
 // Application files
 #include "sort.h"
 
+/* Select pivot and partition data */
 static int partition(int *data, int min, int max)
 {
     int pivot = max;
@@ -20,9 +21,10 @@ static int partition(int *data, int min, int max)
     
     SWAP(data[pivot], data[wall]);
     
-    return wall;
+    return wall; // pivot position
 }
 
+/* Recursive quicksort algorithm */
 static void _quicksort(int *data, int min, int max)
 {
     if (max - min < 1)

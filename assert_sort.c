@@ -9,7 +9,7 @@
 // Application files
 #include "sort.h"
 
-// Print colors
+// Text colors
 #define RED  "\x1B[31m"
 #define GREEN  "\x1B[32m"
 #define NORM  "\x1B[0m"
@@ -26,7 +26,7 @@ typedef struct test_data {
 } test_data_t;
 
 
-/* Get time NOW!*/
+/* Get time NOW! */
 unsigned long long now(void)
 {
     struct timeval time;
@@ -34,15 +34,15 @@ unsigned long long now(void)
     return time.tv_sec * 1000000 + time.tv_usec;
 }
 
-/* Validate sorted data-set */
+/* Validate sorted data set */
 bool validate_sort(int *sorted, test_data_t *test_data)
 {
     int i;
     for (i = 0; i < test_data->size; i++) {
         if (sorted[i] != test_data->sorted[i])
-            return false;
+            return false; // invalid
     }
-    return true;
+    return true; // valid
 }
 
 /* Print array of ints */
@@ -54,7 +54,7 @@ void print_data(int *data, int size)
     }
 }
 
-/* Generate new random data-set */
+/* Generate new random data set */
 int *new_data(int size)
 {
     int i;
@@ -69,6 +69,7 @@ int *new_data(int size)
 /* Initialize test data */
 test_data_t *init(int size)
 {
+    unsigned long long time;
     test_data_t *new = malloc(sizeof(test_data_t));
     if (new == NULL)
         return NULL; // error
@@ -80,8 +81,13 @@ test_data_t *init(int size)
     
     // Setup correctness test
     new->sorted = malloc(sizeof(int) * size);
-    new->sorted = memcpy(new->sorted, new->unsorted, sizeof(int) * size);
+    memcpy(new->sorted, new->unsorted, sizeof(int) * size);
+    
+    time = now();
     sort_ints(new->sorted, size);
+    time = now() - time;
+    
+    printf("Correctness data sorted in %.2f sec.\n", (float) time/1000000);
     
     return new;
 }
@@ -94,7 +100,7 @@ void teardown(test_data_t *test_data)
     free(test_data);
 }
 
-/* Test given sorting algorithm */
+/* Test given sorting algorithm with given test data */
 void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *name)
 {
     int *data;
@@ -123,7 +129,10 @@ void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *
 }
 
 
-/* Program entry point */
+/* ASSERT SORT:
+ * usage: ./assert_sort <number of test elems>
+ * WARNING: Large data sets require a big 
+ * memory pool. */
 int main(int argc, char **argv)
 {    
     int size = 1000; // Default    
@@ -136,10 +145,9 @@ int main(int argc, char **argv)
         
     printf("Running tests with %d elemets:\n", size);
       
-    //test_algorithm(selection_sort, size, "Sel. sort");
+    test_algorithm(selection_sort, test_data, "Sel. sort");
     test_algorithm(quicksort, test_data, "Quicksort");
     test_algorithm(mergesort, test_data, "Mergesort");
-    test_algorithm(sort_ints, test_data, "Threadsort");
     
     teardown(test_data);
 
