@@ -17,7 +17,7 @@ typedef struct task {
 } task_t;
 
 /* Find pivot an place it at the end the of sub-array */
-int select_pivot(int *data, int min, int max)
+static int select_pivot(int *data, int min, int max)
 {
     int h, l, m;
     

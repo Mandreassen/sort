@@ -58,7 +58,10 @@ void print_data(int *data, int size)
 int *new_data(int size)
 {
     int i;
-    int *data = malloc(sizeof(int) * size);    
+    int *data = malloc(sizeof(int) * size);
+    if (data == NULL)
+        return NULL; // No memory
+     
     for (i = 0; i < size; i++) {
         data[i] = rand() % size;
     }
@@ -72,15 +75,25 @@ test_data_t *init(int size)
     unsigned long long time;
     test_data_t *new = malloc(sizeof(test_data_t));
     if (new == NULL)
-        return NULL; // error
+        return NULL; // No memory
     
     new->size = size;
     
     // Generate test data
-    new->unsorted = new_data(size); 
+    new->unsorted = new_data(size);
+    if (new->unsorted == NULL) {
+        free(new);
+        return NULL; // No memory
+    }
     
     // Setup correctness test
     new->sorted = malloc(sizeof(int) * size);
+    if (new->sorted == NULL) {
+        free(new->unsorted);
+        free(new);
+        return NULL; // No memory
+    }
+    
     memcpy(new->sorted, new->unsorted, sizeof(int) * size);
     
     time = now();
@@ -89,7 +102,7 @@ test_data_t *init(int size)
     
     printf("Correctness data sorted in %.2f sec.\n", (float) time/1000000);
     
-    return new;
+    return new; // Success
 }
 
 /* Destroy test data */
@@ -106,8 +119,14 @@ void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *
     int *data;
     unsigned long long time;    
    
-    // Copy test data
+    // Allocate space for this test run
     data = malloc(sizeof(int) * test_data->size);
+    if (data == NULL) {
+        printf("Memory allocation error.\n");
+        return;
+    }
+    
+    // Copy test data
     memcpy(data, test_data->unsorted, sizeof(int) * test_data->size); 
     
     printf("Running %s...", name);
@@ -139,16 +158,22 @@ int main(int argc, char **argv)
     if (argc > 1) 
         size = atoi(argv[1]); // Custom
         
-    printf("Initializing test data...\n");
-    
+    // INIT test data
+    printf("Initializing test data...\n");    
     test_data_t *test_data = init(size);
+    if (test_data == NULL) {
+        printf("Could not allocate memory for test data.\n");
+        return 1;
+    }
         
-    printf("Running tests with %d elemets:\n", size);
-      
+    // Run tests
+    printf("Running tests with %d elemets:\n", size);      
     test_algorithm(selection_sort, test_data, "Sel. sort");
     test_algorithm(quicksort, test_data, "Quicksort");
     test_algorithm(mergesort, test_data, "Mergesort");
+    test_algorithm(heapsort, test_data, "Heapsort ");
     
+    // Cleanup
     teardown(test_data);
 
     return 0;
