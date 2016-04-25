@@ -25,6 +25,9 @@ typedef struct test_data {
     int size;      // Data size
 } test_data_t;
 
+// Global constants
+bool print = false;
+
 
 /* Get time NOW! */
 unsigned long long now(void)
@@ -38,7 +41,7 @@ unsigned long long now(void)
 bool validate_sort(int *sorted, test_data_t *test_data)
 {
     int i;
-    for (i = 0; i < test_data->size; i++) {
+    for (i = 0; i < test_data->size; i++) {        
         if (sorted[i] != test_data->sorted[i])
             return false; // invalid
     }
@@ -49,6 +52,7 @@ bool validate_sort(int *sorted, test_data_t *test_data)
 void print_data(int *data, int size)
 {
     int i;
+    printf("\nDATA:\n");
     for (i = 0; i < size; i++) {
         printf("[%d] -> %d\n", i, data[i]);
     }
@@ -135,14 +139,17 @@ void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *
     // Run test
     time = now(); // Start timer    
     sort_func(data, test_data->size); // Run sort    
-    time = now() - time; // Stop timer    
+    time = now() - time; // Stop timer   
+    
+    if (print)
+        print_data(data, test_data->size); 
    
     // Print result 
     printf("\r%s completed in %.2f sec. Result: ", name, (float) time/1000000);
     if (validate_sort(data, test_data))
         printf(GREEN "Success\n" NORM);
     else
-        printf(RED "Failure\n" NORM);        
+        printf(RED "Failure\n" NORM);
         
     free(data);
 }
@@ -154,9 +161,14 @@ void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *
  * memory pool. */
 int main(int argc, char **argv)
 {    
-    int size = 1000; // Default    
-    if (argc > 1) 
-        size = atoi(argv[1]); // Custom
+    int size = 1000; // Default size
+    
+    while (--argc > 0) {
+        if (strcmp(argv[argc], "-p") == 0) 
+            print = true; // Set print
+        else
+            size = (atoi(argv[argc]) > 0) ? atoi(argv[argc]) : 1000; // Custom size
+    }
         
     // INIT test data
     printf("Initializing test data...\n");    
