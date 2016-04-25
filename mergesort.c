@@ -1,3 +1,5 @@
+/* author: Marius Andreassen (marius.andreassen@uit.no) */
+
 // Application files
 #include "sort.h"
 #include <stdlib.h>
