@@ -37,6 +37,39 @@ unsigned long long now(void)
     return time.tv_sec * 1000000 + time.tv_usec;
 }
 
+/* Sort int array.
+ * Data elements must be within range (0, range).
+ * WARNING: Memory at size of range will
+ * be allocated during sorting. */
+bool range_sort(int *data, int size, int range)
+{
+    int i, pos;
+    int *buff = calloc(sizeof(int), range);
+    if (buff == NULL)
+        return false;
+    
+    for (i = 0; i < size; i++) {
+        if (data[i] > range) {
+            free(buff);
+            return false; // Error data not within range
+        }
+        buff[data[i]]++;
+    }
+    
+    pos = 0;
+    for (i = 0; i < range; i++) {
+        while (buff[i] > 0) {
+            data[pos++] = i;
+            buff[i]--;
+        }
+    }
+    
+    free(buff);
+    
+    return true; // Success
+}
+
+
 /* Validate sorted data set */
 bool validate_sort(int *sorted, test_data_t *test_data)
 {
@@ -73,9 +106,18 @@ int *new_data(int size)
     return data; // New random data    
 }
 
+/* Destroy test data */
+void teardown(test_data_t *test_data)
+{
+    free(test_data->unsorted);
+    free(test_data->sorted);
+    free(test_data);
+}
+
 /* Initialize test data */
 test_data_t *init(int size)
 {
+    bool success;
     unsigned long long time;
     test_data_t *new = malloc(sizeof(test_data_t));
     if (new == NULL)
@@ -101,21 +143,20 @@ test_data_t *init(int size)
     memcpy(new->sorted, new->unsorted, sizeof(int) * size);
     
     time = now();
-    sort_ints(new->sorted, size);
+    success = range_sort(new->sorted, size, size);
     time = now() - time;
     
-    printf("Correctness data sorted in %.2f sec.\n", (float) time/1000000);
+    if (success) {
+        printf("Correctness data sorted in %.2f sec.\n", (float) time/1000000);
+    } else {
+        teardown(new);
+        return NULL; // Error
+    }
     
     return new; // Success
 }
 
-/* Destroy test data */
-void teardown(test_data_t *test_data)
-{
-    free(test_data->unsorted);
-    free(test_data->sorted);
-    free(test_data);
-}
+
 
 /* Test given sorting algorithm with given test data */
 void test_algorithm(void (*sort_func)(int*, int), test_data_t *test_data, char *name)
@@ -180,10 +221,11 @@ int main(int argc, char **argv)
         
     // Run tests
     printf("Running tests with %d elemets:\n", size);      
-    test_algorithm(selection_sort, test_data, "Sel. sort");
-    test_algorithm(quicksort, test_data, "Quicksort");
+    test_algorithm(selection_sort, test_data, "Sel. sort");    
     test_algorithm(mergesort, test_data, "Mergesort");
     test_algorithm(heapsort, test_data, "Heapsort ");
+    test_algorithm(quicksort, test_data, "Quicksort");
+    test_algorithm(parallel_quicksort, test_data, "ParallelQ");
     
     // Cleanup
     teardown(test_data);

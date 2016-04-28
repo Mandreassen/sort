@@ -116,7 +116,7 @@ static void *_thread(void *task)
  * implementation.
  * Larger data sets will be sorted using
  * a threaded quicksort implementation. */
-void sort_ints(int *data, int size)
+void parallel_quicksort(int *data, int size)
 {
     if (size < 1000000)
         return _quicksort(data, 0, size - 1);    
