@@ -220,12 +220,13 @@ int main(int argc, char **argv)
     }
         
     // Run tests
-    printf("Running tests with %d elemets:\n", size);      
-    test_algorithm(selection_sort, test_data, "Sel. sort");    
+    printf("Running tests with %d elemets:\n", size);     
     test_algorithm(mergesort, test_data, "Mergesort");
     test_algorithm(heapsort, test_data, "Heapsort ");
     test_algorithm(quicksort, test_data, "Quicksort");
     test_algorithm(parallel_quicksort, test_data, "ParallelQ");
+    if (size < 100000)
+        test_algorithm(selection_sort, test_data, "Sel. sort");   
     
     // Cleanup
     teardown(test_data);
